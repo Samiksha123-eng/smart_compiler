@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Compiler Error Detective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+  <div class="app-layout">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <path d="M11 8v6"></path>
+            <path d="M8 11h6"></path>
+          </svg>
+        </div>
+        <div class="header-titles">
+          <h1>Smart Compiler Error Detective</h1>
+          <span class="subtitle">Academic 3-Phase Compiler Analysis: Lexical • Syntax • Semantic</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- LANGUAGE SELECTION BUTTONS -->
+        <div class="language-selector" role="tablist" aria-label="Programming Language">
+          <button class="lang-btn active" data-lang="c">
+            <span class="lang-dot dot-c"></span> C
+          </button>
+          <button class="lang-btn" data-lang="cpp">
+            <span class="lang-dot dot-cpp"></span> C++
+          </button>
+          <button class="lang-btn" data-lang="java">
+            <span class="lang-dot dot-java"></span> Java
+          </button>
+          <button class="lang-btn" data-lang="python">
+            <span class="lang-dot dot-python"></span> Python
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Quick Samples Menu -->
+        <div class="sample-loader">
+          <label for="sampleSelect" class="sr-only">Load Sample Code</label>
+          <select id="sampleSelect" class="select-dropdown">
+            <option value="" disabled selected>📂 Load Sample Code...</option>
+            <option value="buggy">⚠️ Buggy Demo (Multi-Phase Errors)</option>
+            <option value="clean">✅ Clean Code (0 Errors)</option>
+            <option value="lexical_demo">🔤 Lexical Errors Demo</option>
+            <option value="syntax_demo">🧱 Syntax Errors Demo</option>
+            <option value="semantic_demo">🧠 Semantic Errors Demo</option>
+          </select>
+        </div>
+
+        <!-- History Drawer Button -->
+        <button id="historyToggleBtn" class="btn-icon" title="View Session History">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span class="history-badge" id="historyCount">0</span>
+        </button>
+
+        <!-- Download Project ZIP Button -->
+        <a href="/api/download-zip" class="btn-icon" title="Download Complete Project ZIP Archive" download>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </a>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="btn-icon" title="Toggle Dark/Light Mode">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="main-content">
+      <!-- LEFT WORKSPACE: CODE EDITOR -->
+      <section class="editor-pane">
+        <div class="pane-header">
+          <div class="pane-title">
+            <span class="file-icon">📄</span>
+            <span id="editorFilename">main.c</span>
+            <span class="dirty-indicator" id="dirtyIndicator" title="Unanalyzed changes"></span>
+          </div>
+          <div class="editor-actions">
+            <button id="clearEditorBtn" class="btn-text" title="Clear Editor">Clear</button>
+            <button id="resetCodeBtn" class="btn-text" title="Reset Code">Reset</button>
+            <button id="detectErrorsBtn" class="btn-primary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Detect Errors</span>
+              <kbd class="shortcut-kbd">Ctrl+Enter</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- CODE EDITOR CONTAINER WITH GUTTER -->
+        <div class="editor-wrapper" id="editorWrapper">
+          <div class="gutter" id="lineGutter"></div>
+          <textarea
+            id="codeEditor"
+            class="code-textarea"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="Type or paste your source code here..."
+          ></textarea>
+        </div>
+
+        <div class="editor-footer">
+          <div class="editor-stats">
+            <span id="cursorPos">Ln 1, Col 1</span>
+            <span class="stat-sep">•</span>
+            <span id="lineCount">1 lines</span>
+            <span class="stat-sep">•</span>
+            <span id="charCount">0 chars</span>
+          </div>
+          <div class="editor-footer-right">
+            <span class="lang-tag" id="currentLangTag">C Standard (C11)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT WORKSPACE: ERROR DETECTIVE & COMPILER INSPECTOR -->
+      <section class="inspector-pane">
+        <!-- INSPECTOR TABS -->
+        <div class="inspector-tabs" role="tablist">
+          <button class="tab-btn active" data-tab="detectiveTab">
+            <span class="tab-icon">🔍</span> Error Detective
+            <span class="tab-badge" id="errorCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="tokensTab">
+            <span class="tab-icon">🔤</span> Tokens Stream
+            <span class="tab-badge-sub" id="tokensCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="symbolsTab">
+            <span class="tab-icon">📋</span> Symbol Table
+            <span class="tab-badge-sub" id="symbolsCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="architectureTab">
+            <span class="tab-icon">🏛️</span> Compiler Pipeline
+          </button>
+        </div>
+
+        <!-- TAB 1: ERROR DETECTIVE (MAIN ERROR REPORT & SUGGESTIONS) -->
+        <div class="tab-content active" id="detectiveTab">
+          <!-- SUMMARY METRICS BAR -->
+          <div class="metrics-banner" id="metricsBanner">
+            <div class="metric-card metric-total">
+              <span class="metric-label">Total Errors</span>
+              <span class="metric-value" id="totalErrorsCount">0</span>
+            </div>
+            <div class="metric-card metric-lexical">
+              <span class="metric-label">Lexical</span>
+              <span class="metric-value" id="lexicalCount">0</span>
+            </div>
+            <div class="metric-card metric-syntax">
+              <span class="metric-label">Syntax</span>
+              <span class="metric-value" id="syntaxCount">0</span>
+            </div>
+            <div class="metric-card metric-semantic">
+              <span class="metric-label">Semantic</span>
+              <span class="metric-value" id="semanticCount">0</span>
+            </div>
+            <div class="metric-card metric-warnings">
+              <span class="metric-label">Warnings</span>
+              <span class="metric-value" id="warningsCount">0</span>
+            </div>
+          </div>
+
+          <!-- STATUS MESSAGE BANNER -->
+          <div class="status-summary" id="statusSummary">
+            <span class="status-icon" id="statusIcon">✨</span>
+            <span class="status-text" id="statusText">Ready to analyze. Click "Detect Errors" or press Ctrl+Enter.</span>
+          </div>
+
+          <!-- PHASE FILTER CHIPS -->
+          <div class="filter-bar">
+            <span class="filter-label">Filter:</span>
+            <button class="filter-chip active" data-filter="all">All Issues (<span id="filterAllCount">0</span>)</button>
+            <button class="filter-chip" data-filter="Lexical">Lexical (<span id="filterLexCount">0</span>)</button>
+            <button class="filter-chip" data-filter="Syntax">Syntax (<span id="filterSynCount">0</span>)</button>
+            <button class="filter-chip" data-filter="Semantic">Semantic (<span id="filterSemCount">0</span>)</button>
+            <button class="filter-chip" data-filter="warning">Warnings (<span id="filterWarnCount">0</span>)</button>
+          </div>
+
+          <!-- ERROR LIST CONTAINER -->
+          <div class="error-cards-list" id="errorCardsList">
+            <!-- Dynamic Error Cards rendered by app.js -->
+            <div class="empty-state">
+              <div class="empty-icon">🔎</div>
+              <h3>No Errors Detected Yet</h3>
+              <p>Click <strong>"Detect Errors"</strong> to run lexical, syntax, and semantic checks on your source code.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: TOKENS STREAM INSPECTOR -->
+        <div class="tab-content" id="tokensTab">
+          <div class="tab-panel-header">
+            <h3>Lexical Token Stream (Scanner Output)</h3>
+            <p class="tab-panel-desc">Tokens identified during Phase 1 (Lexical Analysis), passed to the Parser.</p>
+            <input type="text" id="tokenFilterInput" class="search-input" placeholder="Search tokens by lexeme or type...">
+          </div>
+          <div class="table-container">
+            <table class="inspector-table" id="tokensTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Token Type</th>
+                  <th>Lexeme (Value)</th>
+                  <th>Line</th>
+                  <th>Col</th>
+                </tr>
+              </thead>
+              <tbody id="tokensTableBody">
+                <tr><td colspan="5" class="table-empty">Run error detection to view token stream.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: SYMBOL TABLE INSPECTOR -->
+        <div class="tab-content" id="symbolsTab">
+          <div class="tab-panel-header">
+            <h3>Symbol Table & Scope Environment</h3>
+            <p class="tab-panel-desc">Identifiers, scopes, and types tracked during Phase 3 (Semantic Analysis).</p>
+          </div>
+          <div class="table-container">
+            <table class="inspector-table" id="symbolsTable">
+              <thead>
+                <tr>
+                  <th>Identifier</th>
+                  <th>Type</th>
+                  <th>Scope</th>
+                  <th>Line Declared</th>
+                  <th>Initialized</th>
+                  <th>Usages</th>
+                </tr>
+              </thead>
+              <tbody id="symbolsTableBody">
+                <tr><td colspan="6" class="table-empty">Run error detection to view symbol table.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: COMPILER PIPELINE ARCHITECTURE -->
+        <div class="tab-content" id="architectureTab">
+          <div class="pipeline-guide">
+            <h3>Compiler Design 3-Phase Architecture</h3>
+            <p>Smart Compiler Error Detective simulates the front-end phases of an optimizing language compiler:</p>
+
+            <div class="pipeline-flow">
+              <div class="pipeline-card">
+                <div class="phase-number">Phase 1</div>
+                <h4>Lexical Analysis (Scanner)</h4>
+                <p>Scans the raw character stream into discrete <strong>Tokens</strong>. Flags illegal symbols, unclosed literals, and invalid number suffixes.</p>
+                <div class="phase-tag">Lexical Error</div>
+              </div>
+
+              <div class="flow-arrow">➔</div>
+
+              <div class="pipeline-card">
+                <div class="phase-number">Phase 2</div>
+                <h4>Syntax Analysis (Parser)</h4>
+                <p>Validates grammatical phrase structure. Builds CST/AST, ensures bracket symmetry, statement terminations (semicolons), and loop headers.</p>
+                <div class="phase-tag">Syntax Error</div>
+              </div>
+
+              <div class="flow-arrow">➔</div>
+
+              <div class="pipeline-card">
+                <div class="phase-number">Phase 3</div>
+                <h4>Semantic Analysis</h4>
+                <p>Maintains <strong>Symbol Table</strong> and Scope hierarchy. Verifies type compatibility, undeclared variables, duplicate identifiers, and constant / 0.</p>
+                <div class="phase-tag">Semantic Error</div>
+              </div>
+            </div>
+
+            <div class="pipeline-details">
+              <h4>Compiler Error Recovery & Suggestions</h4>
+              <p>Unlike basic compilers that abort on the first encounter, our modular engine implements <strong>Panic-Mode and Token Synchronization</strong> recovery to discover and report multiple errors in a single compilation pass.</p>
+              <p>Every detected diagnostic provides: <strong>Line & Column</strong>, <strong>Simple English Explanation</strong>, <strong>Formal Standard Reference</strong>, and an <strong>Automated 1-Click Suggestion</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SESSION HISTORY SLIDE-OVER DRAWER -->
+    <aside class="history-drawer" id="historyDrawer">
+      <div class="drawer-header">
+        <h3>Session Error History</h3>
+        <button id="closeHistoryBtn" class="btn-icon" title="Close History">✕</button>
+      </div>
+      <div class="drawer-actions">
+        <span id="historyRunsLabel">0 runs recorded</span>
+        <button id="clearHistoryBtn" class="btn-text">Clear History</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <p class="history-empty">No detection runs recorded in this session yet.</p>
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

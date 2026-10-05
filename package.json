@@ -1,0 +1,14 @@
+{
+  "name": "smart-compiler-error-detective",
+  "version": "1.0.0",
+  "description": "Academic 3-Phase Compiler Error Diagnostic & Recovery System",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py",
+    "clean": "python run.py --wsgi",
+    "test": "python -m unittest discover -s backend/tests"
+  },
+  "keywords": ["compiler-design", "lexer", "parser", "semantic-analysis", "error-recovery"],
+  "author": "Samiksha, Velan, Nithya",
+  "license": "MIT"
+}

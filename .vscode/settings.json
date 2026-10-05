@@ -1,0 +1,12 @@
+{
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    "backend/tests",
+    "-p",
+    "test_*.py"
+  ],
+  "python.testing.unittestEnabled": true,
+  "python.testing.pytestEnabled": false,
+  "editor.formatOnSave": true
+}
